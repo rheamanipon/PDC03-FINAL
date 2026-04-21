@@ -28,7 +28,15 @@
     </head>
     <body>
         <div class="page-transition">
-            @include('layouts.navigation')
+            @auth
+                @if(auth()->user()->role === 'admin')
+                    @include('layouts.navigation-admin')
+                @else
+                    @include('layouts.navigation')
+                @endif
+            @else
+                @include('layouts.navigation')
+            @endauth
 
             @if(session('success') || session('status'))
                 <div class="alert alert-success">
