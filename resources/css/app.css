@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import './admin-dashboard.css';
+@import './user-dashboard.css';
 
 @tailwind base;
 @tailwind components;
@@ -14,7 +16,7 @@
     --text-secondary: #d0d0d0;
     --text-tertiary: #a0a0a0;
     --accent-primary: #ff6600;
-    --accent-secondary: #ff1493;
+    --accent-secondary: #d10070;
     --accent-tertiary: #00d9ff;
     --border-color: rgba(255, 255, 255, 0.15);
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
@@ -448,6 +450,76 @@ nav {
     transform: none;
 }
 
+.ticket-pagination {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.ticket-pagination-nav {
+    display: inline-flex;
+    justify-content: center;
+    margin: 0 auto;
+    background: transparent;
+    padding: 0;
+}
+
+.ticket-pagination-nav .pagination-small {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    background: transparent;
+    padding: 0;
+}
+
+.ticket-pagination-nav .pagination-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 0.65rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 102, 0, 0.2);
+    background: transparent;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.ticket-pagination-nav .pagination-item:hover {
+    background: rgba(255, 102, 0, 0.12);
+    color: var(--accent-primary);
+}
+
+.ticket-pagination-nav .pagination-item-active {
+    background: var(--accent-primary);
+    color: #000;
+    border-color: var(--accent-primary);
+}
+
+.ticket-pagination-nav .pagination-item-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: transparent;
+    border-color: rgba(255, 102, 0, 0.15);
+}
+
+.ticket-pagination-nav .pagination-item-ellipsis {
+    min-width: auto;
+    padding: 0 0.45rem;
+    background: transparent;
+}
+
+.ticket-pagination-nav .pagination-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
 /* ========== CARDS & PANELS ========== */
 .card {
     background-color: var(--bg-secondary);
@@ -475,12 +547,21 @@ nav {
 
 .card:hover {
     border-color: transparent;
-    box-shadow: 0 0 30px rgba(255, 102, 0, 0.4);
-    transform: translateY(-8px);
+    box-shadow: var(--shadow-md);
+    transform: none;
+}
+
+.card.no-hover:hover {
+    box-shadow: var(--shadow-md);
+    transform: none;
+}
+
+.card.no-hover:hover::after {
+    opacity: 0;
 }
 
 .card:hover::after {
-    opacity: 0.1;
+    opacity: 0;
 }
 
 .card-header {
@@ -843,140 +924,6 @@ tr:hover {
     justify-content: space-between;
 }
 
-/* ========== USER DASHBOARD ========== */
-.dashboard-hero {
-    margin-bottom: 2rem;
-}
-
-.dashboard-kicker {
-    color: var(--accent-primary);
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 0.4rem;
-}
-
-.dashboard-title {
-    font-size: 3.2rem;
-    margin-bottom: 0.35rem;
-}
-
-.dashboard-subtitle {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    max-width: 760px;
-}
-
-.user-dashboard-metrics {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.35rem;
-}
-
-.dashboard-metric-card {
-    background-color: var(--bg-secondary);
-    box-shadow: var(--shadow-md);
-    padding: 1.2rem;
-    border-top: 2px solid rgba(255, 102, 0, 0.45);
-}
-
-.dashboard-metric-label {
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 0.72rem;
-    font-weight: 700;
-    margin-bottom: 0.4rem;
-}
-
-.dashboard-metric-value {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--accent-primary);
-    line-height: 1.1;
-    margin-bottom: 0.25rem;
-}
-
-.dashboard-metric-value--pink {
-    color: var(--accent-secondary);
-}
-
-.dashboard-metric-value--blue {
-    color: var(--accent-tertiary);
-}
-
-.dashboard-metric-meta {
-    color: var(--text-tertiary);
-    font-size: 0.82rem;
-}
-
-.user-dashboard-panels {
-    display: grid;
-    grid-template-columns: 1fr 1.2fr;
-    gap: 1rem;
-}
-
-.dashboard-panel .card-header {
-    padding: 1.25rem 1.25rem 0.95rem;
-}
-
-.dashboard-panel .card-body {
-    padding: 1.25rem;
-}
-
-.dashboard-panel-title {
-    font-size: 1.05rem;
-    letter-spacing: 0.05em;
-}
-
-.dashboard-panel-text {
-    color: var(--text-secondary);
-    font-size: 0.92rem;
-    margin-bottom: 0.95rem;
-}
-
-.dashboard-actions {
-    display: grid;
-    gap: 0.75rem;
-}
-
-.dashboard-action-btn {
-    width: 100%;
-    text-align: center;
-}
-
-.dashboard-booking-item {
-    border: 1px solid rgba(255, 102, 0, 0.2);
-    background-color: rgba(255, 255, 255, 0.02);
-    padding: 0.9rem;
-    margin-bottom: 0.9rem;
-}
-
-.dashboard-booking-title {
-    color: var(--text-primary);
-    font-weight: 700;
-    font-size: 1rem;
-    margin-bottom: 0.2rem;
-}
-
-.dashboard-booking-meta {
-    color: var(--text-tertiary);
-    font-size: 0.84rem;
-    margin-bottom: 0.6rem;
-}
-
-.dashboard-empty {
-    min-height: 170px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    border: 1px dashed rgba(255, 102, 0, 0.3);
-    background-color: rgba(255, 102, 0, 0.04);
-    padding: 1rem;
-    text-align: center;
-}
 
 /* ========== BOOKINGS PAGE ========== */
 .bookings-hero {
@@ -1404,18 +1351,6 @@ tbody td:first-child {
         font-size: 1.5rem;
     }
 
-    .dashboard-title {
-        font-size: 1.85rem;
-    }
-
-    .user-dashboard-metrics {
-        grid-template-columns: 1fr;
-    }
-
-    .user-dashboard-panels {
-        grid-template-columns: 1fr;
-    }
-
     .bookings-title {
         font-size: 1.8rem;
     }
@@ -1431,6 +1366,7 @@ tbody td:first-child {
     .bookings-detail-grid {
         grid-template-columns: 1fr;
     }
+
 }
 
 /* ========== UTILITIES ========== */

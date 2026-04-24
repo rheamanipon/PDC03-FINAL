@@ -73,7 +73,7 @@ class HomeController extends Controller
 
     public function show(Concert $concert)
     {
-$concert->load(['venue', 'ticketPrices', 'bookings', 'concertSeats.seat']);
+        $concert->load(['venue', 'ticketPrices']);
         return view('concert.show', compact('concert'));
     }
 }

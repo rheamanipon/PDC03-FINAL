@@ -20,6 +20,7 @@ return new class extends Migration
             $table->date('date');
             $table->time('time');
             $table->string('poster_url')->nullable();
+            $table->string('seat_plan_image')->nullable();
         });
     }
 

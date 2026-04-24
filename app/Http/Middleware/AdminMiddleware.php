@@ -15,12 +15,8 @@ class AdminMiddleware
             return redirect()->route('login');
         }
 
-        $user = Auth::user();
-
-        // This will force the error page to show us what's happening
-        if (!$user->isAdmin()) {
-            $actualRole = $user->role ?? 'NULL';
-            abort(403, "Access Denied! Your role is: '{$actualRole}'. Checking against: 'admin'");
+        if (!Auth::user()->isAdmin()) {
+            return redirect()->route('home');
         }
 
         return $next($request);

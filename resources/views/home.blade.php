@@ -71,7 +71,7 @@
                     @if($concert->poster_url)
                         <div style="width: 100%; height: 180px; background: url('{{ asset('storage/' . $concert->poster_url) }}'); background-size: cover; background-position: center;"></div>
                     @else
-                        <div style="width: 100%; height: 180px; background: linear-gradient(135deg, #ff6600, #ff1493); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
+                        <div style="width: 100%; height: 180px; background: linear-gradient(135deg, #ff6600, #d10070); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
                             🎵
                         </div>
                     @endif
@@ -95,7 +95,7 @@
                 <p style="color: #a0a0a0; font-size: 0.875rem;">Select your favorite concert from our list</p>
             </div>
             <div style="background-color: #1a1a1a; padding: 2rem; border-radius: 0.5rem; border: 1px solid #2d2d2d;">
-                <div style="width: 60px; height: 60px; background-color: #ff1493; border-radius: 50%; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; color: #000;">2</div>
+                <div style="width: 60px; height: 60px; background-color: #d10070; border-radius: 50%; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; color: #000;">2</div>
                 <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: #ffffff;">Choose Date & Time</h3>
                 <p style="color: #a0a0a0; font-size: 0.875rem;">Pick the date and time that works best for you</p>
             </div>

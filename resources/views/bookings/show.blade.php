@@ -1,9 +1,12 @@
 <x-app-layout>
     <!-- PAGE HEADER -->
-    <div style="margin-bottom: 3rem;">
-        <p style="color: var(--accent-primary); font-weight: 700; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.1em; margin-bottom: 0.5rem;">Booking Details</p>
-        <h1 class="page-title" style="font-size: 3.5rem;">{{ $booking->concert->title }}</h1>
-        <p style="color: var(--accent-secondary); font-size: 1.1rem; font-weight: 600; margin-top: 1rem;">by {{ $booking->concert->artist }}</p>
+    <div style="margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+        <div>
+            <p style="color: var(--accent-primary); font-weight: 700; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.1em; margin-bottom: 0.5rem;">Booking Details</p>
+            <h1 class="page-title" style="font-size: 3.5rem;">{{ $booking->concert->title }}</h1>
+            <p style="color: var(--accent-secondary); font-size: 1.1rem; font-weight: 600; margin-top: 1rem;">by {{ $booking->concert->artist }}</p>
+            <a href="{{ route('bookings.index') }}" class="btn btn-primary btn-small" style="margin-top: 1rem;">Back</a>
+        </div>
     </div>
 
     <div class="grid-2 gap-8">
@@ -30,9 +33,9 @@
                 </div>
 
                 <!-- Tickets List -->
-                <h4 style="font-size: 1rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1.5rem; color: var(--accent-primary);">Your Tickets ({{ $booking->tickets->count() }})</h4>
+                <h4 style="font-size: 1rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1.5rem; color: var(--accent-primary);">Your Tickets ({{ $tickets->total() }})</h4>
                 <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    @foreach($booking->tickets as $ticket)
+                    @foreach($tickets as $ticket)
                         <div style="padding: 1.25rem; border-left: 3px solid var(--accent-primary); background-color: rgba(255, 102, 0, 0.05);">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                                 <div>
@@ -46,13 +49,18 @@
                                 </div>
                             </div>
                             @if($ticket->qr_code)
-                                <div style="padding: 1rem; background-color: rgba(255, 255, 255, 0.05); border-radius: 0;">
+                                <div style="padding: 1rem; background-color: rgba(255, 255, 255, 0.05); border-radius: 0; display: grid; gap: 0.75rem; justify-items: center;">
                                     <p style="color: var(--text-tertiary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 0.5rem;">QR Code</p>
-                                    <p style="color: var(--text-secondary); font-family: monospace; font-size: 0.75rem; word-break: break-all;">{{ $ticket->qr_code }}</p>
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode($ticket->qr_code) }}" alt="QR Code" style="max-width: 200px; width: 100%; height: auto; background: white; padding: 0.5rem;" />
+                                    <p style="color: var(--text-secondary); font-family: monospace; font-size: 0.75rem; word-break: break-all; margin-top: 0.25rem;">{{ $ticket->qr_code }}</p>
                                 </div>
                             @endif
                         </div>
                     @endforeach
+                </div>
+
+                <div class="ticket-pagination" style="margin-top: 1rem;">
+                    {{ $tickets->links('vendor.pagination.booking') }}
                 </div>
             </div>
         </div>

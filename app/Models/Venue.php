@@ -12,7 +12,9 @@ class Venue extends Model
         'name',
         'location',
         'capacity',
+        'seat_plan_image',
     ];
+
 
     public function concerts()
     {
@@ -23,4 +25,6 @@ class Venue extends Model
     {
         return $this->hasMany(Seat::class);
     }
+
+
 }

@@ -13,11 +13,10 @@ return new class extends Migration
     {
         Schema::create('seats', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('venue_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('venue_id')->constrained()->onDelete('cascade');
             $table->string('seat_number');
             $table->string('section');
-
-            $table->unique(['venue_id', 'seat_number']);
+            $table->timestamps();
         });
     }
 

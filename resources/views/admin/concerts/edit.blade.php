@@ -1,95 +1,72 @@
 <x-app-layout>
-    <div class="admin-container">
-        <!-- PAGE HEADER -->
-        <div style="margin-bottom: 3rem;">
-            <h1 style="font-size: 3.5rem; font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem;">EDIT CONCERT</h1>
-            <p style="font-size: 1.1rem; color: var(--accent-primary); font-weight: 600;">Update concert details and upload a new poster image</p>
-        </div>
-
-        <!-- FORM CARD -->
-        <div class="admin-form">
-            <form action="{{ route('admin.concerts.update', $concert) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                @method('PUT')
-
-                <!-- BASIC INFO SECTION -->
-                <h3 style="font-size: 1.5rem; font-weight: 700; text-transform: uppercase; margin-top: 0; margin-bottom: 1.5rem; color: var(--accent-primary);">Basic Information</h3>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="title" class="form-label">Concert Title</label>
-                        <input type="text" name="title" id="title" value="{{ old('title', $concert->title) }}" placeholder="e.g., Summer Music Festival" required>
-                        @error('title') <p class="form-error">{{ $message }}</p> @enderror
+    <section class="admin-dashboard" id="adminDashboard">
+        <div class="admin-shell">
+            @include('admin.partials.sidebar')
+            <main class="admin-main">
+                @include('admin.partials.flash')
+                <header class="admin-header">
+                    <div><h2>Edit Concert</h2><p>Update event metadata to ensure listing accuracy and schedule integrity.</p></div>
+                    <div class="admin-header-actions">
+                        <button type="button" class="ad-btn ad-icon-btn" id="themeToggleBtn"><span id="themeToggleIcon">◐</span></button>
+                        <a href="{{ route('admin.concerts.index') }}" class="ad-btn">Back</a>
                     </div>
-
-                    <div class="form-group">
-                        <label for="artist" class="form-label">Artist / Performer</label>
-                        <input type="text" name="artist" id="artist" value="{{ old('artist', $concert->artist) }}" placeholder="e.g., The Weeknd" required>
-                        @error('artist') <p class="form-error">{{ $message }}</p> @enderror
-                    </div>
-                </div>
-
-                <!-- EVENT DETAILS SECTION -->
-                <h3 style="font-size: 1.5rem; font-weight: 700; text-transform: uppercase; margin-top: 2rem; margin-bottom: 1.5rem; color: var(--accent-primary);">Event Details</h3>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="venue_id" class="form-label">Venue</label>
-                        <select name="venue_id" id="venue_id" required>
-                            <option value="">-- Select a Venue --</option>
-                            @foreach($venues as $venue)
-                                <option value="{{ $venue->id }}" {{ old('venue_id', $concert->venue_id) == $venue->id ? 'selected' : '' }}>{{ $venue->name }} (Cap. {{ $venue->capacity }})</option>
-                            @endforeach
-                        </select>
-                        @error('venue_id') <p class="form-error">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label for="date" class="form-label">Event Date</label>
-                        <input type="date" name="date" id="date" value="{{ old('date', $concert->date?->format('Y-m-d')) }}" required>
-                        @error('date') <p class="form-error">{{ $message }}</p> @enderror
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="time" class="form-label">Event Time</label>
-                        <input type="time" name="time" id="time" value="{{ old('time', $concert->time?->format('H:i')) }}" required>
-                        @error('time') <p class="form-error">{{ $message }}</p> @enderror
-                    </div>
-                </div>
-
-                <!-- DESCRIPTION SECTION -->
-                <h3 style="font-size: 1.5rem; font-weight: 700; text-transform: uppercase; margin-top: 2rem; margin-bottom: 1.5rem; color: var(--accent-primary);">Description & Media</h3>
-
-                <div class="form-group" style="margin-bottom: 2rem;">
-                    <label for="description" class="form-label">Event Description</label>
-                    <textarea name="description" id="description" rows="5" placeholder="Describe the concert, atmosphere, special guests, etc." style="resize: vertical;">{{ old('description', $concert->description) }}</textarea>
-                    @error('description') <p class="form-error">{{ $message }}</p> @enderror
-                </div>
-
-                @if($concert->poster_url)
-                    <div class="form-group" style="margin-bottom: 2rem;">
-                        <label class="form-label">Current Poster</label>
-                        <div style="max-width: 320px; border: 1px solid var(--border-color); padding: 0.5rem; background: #fff;">
-                            <img src="{{ asset('storage/' . $concert->poster_url) }}" alt="{{ $concert->title }} poster" style="width: 100%; height: auto; display: block;" />
+                </header>
+                <section class="ad-card">
+                    <h3 class="ad-panel-title">Edit Concert Information</h3>
+                    <form method="POST" action="{{ route('admin.concerts.update', $concert) }}" enctype="multipart/form-data" class="ad-form-grid-2">
+                        @csrf @method('PUT')
+                        <div class="ad-field">
+                            <label class="ad-label" for="title">Title</label>
+                            <input class="ad-input" id="title" type="text" name="title" value="{{ old('title', $concert->title) }}" required>
                         </div>
-                    </div>
-                @endif
-
-                <div class="form-group">
-                    <label for="poster" class="form-label">Upload New Poster Image</label>
-                    <input type="file" name="poster" id="poster" accept="image/*" style="padding: 1rem; border: 2px dashed var(--border-color);">
-                    <p class="form-help">Choose a new poster image to replace the current one, if needed.</p>
-                    @error('poster') <p class="form-error">{{ $message }}</p> @enderror
-                </div>
-
-                <!-- ACTIONS -->
-                <div class="form-actions">
-                    <a href="{{ route('admin.concerts.index') }}" class="btn btn-outline">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Update Concert</button>
-                </div>
-            </form>
+                        <div class="ad-field">
+                            <label class="ad-label" for="artist">Artist</label>
+                            <input class="ad-input" id="artist" type="text" name="artist" value="{{ old('artist', $concert->artist) }}" required>
+                        </div>
+                        <div class="ad-field">
+                            <label class="ad-label" for="venue_id">Venue</label>
+                            <select class="ad-select" id="venue_id" name="venue_id" required>
+                                @foreach($venues as $venue)
+                                    <option value="{{ $venue->id }}" {{ old('venue_id', $concert->venue_id) == $venue->id ? 'selected' : '' }}>{{ $venue->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="ad-field">
+                            <label class="ad-label" for="date">Date</label>
+                            <input class="ad-input" id="date" type="date" name="date" value="{{ old('date', optional($concert->date)->format('Y-m-d')) }}" required>
+                        </div>
+                        <div class="ad-field">
+                            <label class="ad-label" for="time">Time</label>
+                            <input class="ad-input" id="time" type="time" name="time" value="{{ old('time', optional($concert->time)->format('H:i')) }}" required>
+                        </div>
+                        <div class="ad-field">
+                            <label class="ad-label" for="poster">Update Poster</label>
+                            <input class="ad-input" id="poster" type="file" name="poster" accept="image/*">
+                        </div>
+                        <div class="ad-field">
+                            <label class="ad-label" for="seat_plan_image">Update Seat Plan Image</label>
+                            <input class="ad-input" id="seat_plan_image" type="file" name="seat_plan_image" accept="image/*">
+                            <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem;">Update venue seat plan image for customer reference</p>
+                        </div>
+                        <div class="ad-field ad-field-full">
+                            <label class="ad-label" for="description">Description</label>
+                            <textarea class="ad-textarea" id="description" name="description">{{ old('description', $concert->description) }}</textarea>
+                        </div>
+                        @if($concert->poster_url)
+                            <div class="ad-field ad-field-full">
+                                <label class="ad-label">Current Poster</label>
+                                <img class="ad-poster" src="{{ asset('storage/'.$concert->poster_url) }}" alt="{{ $concert->title }} poster">
+                            </div>
+                        @endif
+                        <div class="ad-field ad-field-full">
+                            <div class="ad-actions-row">
+                                <button class="ad-btn ad-btn-primary" type="submit">Update Concert</button>
+                            </div>
+                        </div>
+                    </form>
+                </section>
+            </main>
         </div>
-    </div>
+    </section>
+    @include('admin.partials.theme-script')
 </x-app-layout>

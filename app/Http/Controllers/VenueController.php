@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Seat;
+use App\Models\ActivityLog;
 use App\Models\Venue;
 use Illuminate\Http\Request;
 
@@ -25,16 +25,31 @@ class VenueController extends Controller
             'name' => 'required|string|max:255',
             'location' => 'required|string|max:255',
             'capacity' => 'required|integer|min:1',
+            'seat_plan_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        Venue::create($request->only(['name', 'location', 'capacity']));
+        $data = $request->only(['name', 'location', 'capacity']);
+
+        if ($request->hasFile('seat_plan_image')) {
+            $data['seat_plan_image'] = $request->file('seat_plan_image')->store('venue-plans', 'public');
+        }
+
+        $venue = Venue::create($data);
+
+        ActivityLog::record([
+            'user_id' => auth()->id(),
+            'action' => 'create',
+            'entity_type' => 'venue',
+            'entity_id' => $venue->id,
+            'description' => 'Created venue: '.$venue->name,
+        ]);
 
         return redirect()->route('admin.venues.index')->with('success', 'Venue created successfully.');
     }
 
+
     public function show(Venue $venue)
     {
-        $venue->load('seats');
         return view('admin.venues.show', compact('venue'));
     }
 
@@ -49,16 +64,45 @@ class VenueController extends Controller
             'name' => 'required|string|max:255',
             'location' => 'required|string|max:255',
             'capacity' => 'required|integer|min:1',
+            'seat_plan_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $venue->update($request->only(['name', 'location', 'capacity']));
+        $data = $request->only(['name', 'location', 'capacity']);
+        $request->request->remove('seat_plan_image');
 
-        return redirect()->route('admin.venues.index')->with('success', 'Venue updated successfully.');
+        if ($request->hasFile('seat_plan_image')) {
+            $data['seat_plan_image'] = $request->file('seat_plan_image')->store('venue-plans', 'public');
+        }
+
+        $venue->update($data);
+
+        $description = 'Updated venue: '.$venue->name;
+        ActivityLog::record([
+            'user_id' => auth()->id(),
+            'action' => 'update',
+            'entity_type' => 'venue',
+            'entity_id' => $venue->id,
+            'description' => $description,
+        ]);
+
+        $successMsg = 'Venue updated successfully.';
+        return redirect()->route('admin.venues.index')->with('success', $successMsg);
     }
 
     public function destroy(Venue $venue)
     {
+        $name = $venue->name;
+        $id = $venue->id;
         $venue->delete();
+        ActivityLog::record([
+            'user_id' => auth()->id(),
+            'action' => 'delete',
+            'entity_type' => 'venue',
+            'entity_id' => $id,
+            'description' => 'Deleted venue: '.$name,
+        ]);
         return redirect()->route('admin.venues.index')->with('success', 'Venue deleted successfully.');
     }
+
+
 }

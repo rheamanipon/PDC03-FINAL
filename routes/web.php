@@ -2,6 +2,12 @@
 
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ConcertController;
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\Api\Admin\ConcertApiController;
+use App\Http\Controllers\Api\Admin\DashboardApiController;
+use App\Http\Controllers\Api\Admin\UserApiController;
+use App\Http\Controllers\Api\Admin\VenueApiController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\VenueController;
@@ -13,9 +19,14 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/concerts', [HomeController::class, 'concerts'])->name('concerts.index');
 
 // More specific routes BEFORE generic ones
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/concerts/{concert}/book', [BookingController::class, 'create'])->name('bookings.create')->where('concert', '[0-9]+');
     Route::post('/concerts/{concert}/book', [BookingController::class, 'store'])->name('bookings.store')->where('concert', '[0-9]+');
+    Route::get('/concerts/{concert}/review', [BookingController::class, 'review'])->name('bookings.review')->where('concert', '[0-9]+');
+    Route::get('/concerts/{concert}/checkout', [BookingController::class, 'checkout'])->name('bookings.checkout')->where('concert', '[0-9]+');
+    Route::post('/concerts/{concert}/confirm-payment', [BookingController::class, 'confirmPayment'])->name('bookings.confirm-payment')->where('concert', '[0-9]+');
+    Route::get('/bookings/{booking}/tickets', [BookingController::class, 'tickets'])->name('bookings.tickets')->where('booking', '[0-9]+');
+    Route::get('/concerts/{concert}/seats', [BookingController::class, 'getSeats'])->name('bookings.seats')->where('concert', '[0-9]+');
 });
 
 // Generic concert show route
@@ -23,9 +34,9 @@ Route::get('/concerts/{concert}', [HomeController::class, 'show'])->name('concer
 
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'user'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'user'])->group(function () {
     Route::resource('bookings', BookingController::class, ['only' => ['index', 'show']]);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -34,14 +45,25 @@ Route::middleware('auth')->group(function () {
 });
 
 // Admin routes
-Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', function () {
-        return view('dashboard');
-    })->name('dashboard');
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [AdminDashboardController::class, 'dashboard'])->name('dashboard');
+    Route::get('/analytics', [AdminDashboardController::class, 'analytics'])->name('analytics');
+    Route::get('/activity-logs', [AdminDashboardController::class, 'activityLogs'])->name('activity-logs');
+    Route::get('/ticket-management', [AdminDashboardController::class, 'ticketManagement'])->name('ticket-management');
 
     Route::resource('concerts', ConcertController::class);
     Route::resource('venues', VenueController::class);
+    Route::resource('users', AdminUserController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     // Add more admin routes
+});
+
+Route::middleware(['auth', 'admin'])->prefix('api/admin')->name('api.admin.')->group(function () {
+    Route::get('/metrics', [DashboardApiController::class, 'metrics'])->name('metrics');
+    Route::get('/analytics', [DashboardApiController::class, 'analytics'])->name('analytics');
+    Route::get('/activity-logs', [DashboardApiController::class, 'activityLogs'])->name('activity-logs');
+    Route::apiResource('users', UserApiController::class);
+    Route::apiResource('concerts', ConcertApiController::class);
+    Route::apiResource('venues', VenueApiController::class);
 });
 
 require __DIR__.'/auth.php';

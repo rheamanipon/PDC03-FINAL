@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Seat extends Model
 {
-    public $timestamps = false;
-
     protected $fillable = [
         'venue_id',
         'seat_number',
@@ -27,10 +25,5 @@ class Seat extends Model
     public function tickets()
     {
         return $this->hasMany(Ticket::class);
-    }
-
-    public function concerts()
-    {
-        return $this->belongsToMany(Concert::class, 'concert_seats')->withPivot('status');
     }
 }

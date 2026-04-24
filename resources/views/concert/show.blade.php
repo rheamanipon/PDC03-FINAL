@@ -53,61 +53,43 @@
                         @endforeach
                     </div>
                 </div>
+
             </div>
 
             <div class="lg:col-span-5">
                 <div class="sticky top-12" style="background: #05050a; border: 1px solid #1a1a1a; padding: 2.5rem;">
                     <div style="margin-bottom: 2rem; text-align: center;">
-                        <div style="margin: 0 auto 1rem auto; width: 240px; padding: 1rem 0; border-radius: 1.5rem; border: 1px solid rgba(148, 163, 184, 0.25);">
-                            <span style="font-size: 0.9rem; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: #e0e7ff;">Stage</span>
+                        <h3 style="font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: #e0e7ff; margin-bottom: 1rem;">Seat Plan</h3>
+                        <div style="width: 100%; height: 280px; overflow: hidden; border-radius: 1rem; background: #111; display: flex; align-items: center; justify-content: center;">
+                            @if($concert->seat_plan_image)
+                                <img src="{{ asset('storage/' . $concert->seat_plan_image) }}" alt="Seat Plan" style="width: 100%; height: 100%; object-fit: cover;" />
+                            @else
+                                <div style="padding: 1rem; text-align: center; color: #94a3b8;">
+                                    🗺️ No Seat Plan Available
+                                </div>
+                            @endif
                         </div>
-                        <p style="margin: 0; font-size: 0.76rem; font-weight: 700; color: #94a3b8; letter-spacing: 0.15em; text-transform: uppercase;">Seating layout</p>
                     </div>
 
-                    @php
-                        $sections = $concert->concertSeats->groupBy(fn($seat) => $seat->seat->section);
-                        $orderedSections = collect();
-                        $order = ['floor', 'lower', 'upper', 'balcony'];
-                        foreach ($order as $orderName) {
-                            foreach ($sections as $name => $group) {
-                                if (str_contains(strtolower($name), $orderName) && !$orderedSections->has($name)) {
-                                    $orderedSections->put($name, $group);
-                                }
-                            }
-                        }
-                        foreach ($sections as $name => $group) {
-                            if (!$orderedSections->has($name)) {
-                                $orderedSections->put($name, $group);
-                            }
-                        }
-                    @endphp
-
-                    @foreach($orderedSections as $section => $seats)
-                        <div style="margin-bottom: 0.75rem; background: #0b0b16; border: 1px solid rgba(148, 163, 184, 0.12); border-radius: 1.25rem; padding: 0.75rem;">
-                            <div style="display: grid; grid-template-columns: repeat(10, minmax(16px, 1fr)); gap: 3px; margin-bottom: 0.75rem;">
-                                @foreach($seats->sortBy(fn($s) => $s->seat->seat_number) as $concertSeat)
-                                    @php
-                                        $seatStyle = $concertSeat->status === 'available'
-                                            ? 'background: rgba(129, 140, 248, 0.18); border: 1px solid rgba(129, 140, 248, 0.35);'
-                                            : 'background: rgba(71, 85, 105, 0.25); border: 1px solid rgba(71, 85, 105, 0.45);';
-                                    @endphp
-                                        <div style="aspect-ratio: 1.3 / 1; border-radius: 0.65rem; {{ $seatStyle }} display: flex; align-items: center; justify-content: center; font-size: 0.55rem; font-weight: 700; color: #fff;">{{ preg_replace('/[^0-9]/', '', $concertSeat->seat->seat_number) }}</div>
-                                @endforeach
+                    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(148, 163, 184, 0.12);">
+                        <p style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 1rem; text-align: center;">SECTION LEGEND</p>
+                        <div style="display: grid; grid-template-columns: repeat(2, minmax(120px, 1fr)); gap: 1rem;">
+                            <div style="text-align: center;">
+                                <div style="width: 12px; height: 12px; background: #f97316; border-radius: 2px; margin: 0 auto 0.5rem;"></div>
+                                <span style="font-size: 0.75rem; font-weight: 700; color: #c7d2fe; text-transform: uppercase; letter-spacing: 0.08em; display: block;">VIP Standing</span>
                             </div>
-                            <div style="text-align: center; color: #94a3b8; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">
-                                {{ $section }}
+                            <div style="text-align: center;">
+                                <div style="width: 12px; height: 12px; background: #a855f7; border-radius: 2px; margin: 0 auto 0.5rem;"></div>
+                                <span style="font-size: 0.75rem; font-weight: 700; color: #c7d2fe; text-transform: uppercase; letter-spacing: 0.08em; display: block;">LBB</span>
                             </div>
-                        </div>
-                    @endforeach
-
-                    <div style="display: flex; justify-content: start; gap: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(148, 163, 184, 0.12);">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <div style="width: 10px; height: 10px; border-radius: 9999px; background: rgba(129, 140, 248, 0.5);"></div>
-                            <span style="font-size: 0.75rem; font-weight: 700; color: #c7d2fe; text-transform: uppercase; letter-spacing: 0.08em;">Available</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <div style="width: 10px; height: 10px; border-radius: 9999px; background: rgba(71, 85, 105, 0.7);"></div>
-                            <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em;">Unavailable</span>
+                            <div style="text-align: center;">
+                                <div style="width: 12px; height: 12px; background: #22c55e; border-radius: 2px; margin: 0 auto 0.5rem;"></div>
+                                <span style="font-size: 0.75rem; font-weight: 700; color: #c7d2fe; text-transform: uppercase; letter-spacing: 0.08em; display: block;">UBB</span>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="width: 12px; height: 12px; background: #38bdf8; border-radius: 2px; margin: 0 auto 0.5rem;"></div>
+                                <span style="font-size: 0.75rem; font-weight: 700; color: #c7d2fe; text-transform: uppercase; letter-spacing: 0.08em; display: block;">Gen Ad</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -118,7 +100,7 @@
             
             @auth
                 <a href="{{ route('bookings.create', ['concert' => $concert->id]) }}" class="btn-primary" style="width: 100%; height: 80px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 900; letter-spacing: 0.4em; border-radius: 0; color: #000; border: none; transition: 0.3s; cursor: pointer;">
-                    SELECT A SEAT
+                    CHOOSE TICKET TYPE
                 </a>
             @else
                 <a href="{{ route('login') }}" style="width: 100%; height: 80px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 900; letter-spacing: 0.4em; border: 1px solid #27272a; color: #fff; text-decoration: none;">

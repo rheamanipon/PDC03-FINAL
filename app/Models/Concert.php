@@ -16,6 +16,7 @@ class Concert extends Model
         'date',
         'time',
         'poster_url',
+        'seat_plan_image',
     ];
 
     protected $casts = [
@@ -43,8 +44,5 @@ class Concert extends Model
         return $this->hasMany(ConcertSeat::class);
     }
 
-    public function seats()
-    {
-        return $this->belongsToMany(Seat::class, 'concert_seats')->withPivot('status');
-    }
+
 }

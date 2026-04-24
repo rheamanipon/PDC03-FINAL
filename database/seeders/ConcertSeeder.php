@@ -3,12 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Concert;
-use App\Models\ConcertSeat;
 use App\Models\TicketPrice;
 use App\Models\Venue;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class ConcertSeeder extends Seeder
 {
@@ -70,23 +67,14 @@ class ConcertSeeder extends Seeder
                 'poster_url' => null,
             ]);
 
-            // Create concert seats for all seats in the venue
-            foreach ($venue->seats as $seat) {
-                ConcertSeat::create([
-                    'concert_id' => $concert->id,
-                    'seat_id' => $seat->id,
-                    'status' => 'available',
-                ]);
-            }
+            // Create default ticket prices for new types
+            $ticketTypes = ['VIP Standing', 'Lower Box B (LBB)', 'Upper Box B (UBB)', 'General Admission (Gen Ad)'];
+            $defaultPrices = [250.00, 150.00, 100.00, 75.00];
 
-            // Create default ticket prices
-            $sections = ['Floor', 'Lower Bowl', 'Upper Bowl', 'Balcony'];
-            $defaultPrices = [150.00, 100.00, 75.00, 50.00];
-
-            foreach ($sections as $index => $section) {
+            foreach ($ticketTypes as $index => $type) {
                 TicketPrice::create([
                     'concert_id' => $concert->id,
-                    'section' => $section,
+                    'section' => $type,
                     'price' => $defaultPrices[$index],
                 ]);
             }

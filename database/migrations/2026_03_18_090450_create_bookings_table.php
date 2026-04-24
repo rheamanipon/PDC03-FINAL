@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('concert_id')->constrained()->cascadeOnDelete();
             $table->decimal('total_price', 10, 2);
             $table->enum('status', ['pending', 'confirmed', 'cancelled'])->default('pending');
+            $table->timestamps();
         });
     }
 

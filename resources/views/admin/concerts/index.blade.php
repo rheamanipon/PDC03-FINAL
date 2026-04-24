@@ -1,69 +1,47 @@
 <x-app-layout>
-    <div class="admin-container">
-        <!-- PAGE HEADER -->
-        <div class="admin-header">
-            <div>
-                <h1>MANAGE CONCERTS</h1>
-                <p>Create, edit, and delete concert events</p>
-            </div>
-            <a href="{{ route('admin.concerts.create') }}" class="btn btn-primary">+ Add New Concert</a>
+    <section class="admin-dashboard" id="adminDashboard">
+        <div class="admin-shell">
+            @include('admin.partials.sidebar')
+            <main class="admin-main">
+                @include('admin.partials.flash')
+                <header class="admin-header">
+                    <div><h2>Concert Catalog</h2><p>Manage event listings, schedules, and publication readiness.</p></div>
+                    <div class="admin-header-actions">
+                        <button type="button" class="ad-btn ad-icon-btn" id="themeToggleBtn"><span id="themeToggleIcon">◐</span></button>
+                        <a href="{{ route('admin.concerts.create') }}" class="ad-btn ad-btn-primary">Add Concert</a>
+                    </div>
+                </header>
+                <section class="ad-card">
+                    <div class="ad-table-wrap">
+                        <table class="ad-table">
+                            <thead><tr><th>Title</th><th>Artist</th><th>Venue</th><th>Date</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                @forelse($concerts as $concert)
+                                    <tr>
+                                        <td>{{ $concert->title }}</td>
+                                        <td>{{ $concert->artist }}</td>
+                                        <td>{{ optional($concert->venue)->name }}</td>
+                                        <td>{{ $concert->date?->format('M d, Y') }}</td>
+                                        <td style="display:flex; gap:.45rem;">
+                                            <a href="{{ route('admin.concerts.show', $concert) }}" class="ad-btn">View</a>
+                                            <a href="{{ route('admin.concerts.edit', $concert) }}" class="ad-btn">Edit</a>
+                                            <form method="POST" action="{{ route('admin.concerts.destroy', $concert) }}" data-confirm="true" data-confirm-message="Are you sure to delete this concert?">
+                                                @csrf @method('DELETE')
+                                                <button class="ad-btn ad-btn-logout" type="submit" data-loading-text="Deleting...">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="5">No concerts found.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top:.8rem;">{{ $concerts->links() }}</div>
+                </section>
+            </main>
         </div>
-
-        <!-- CONCERTS TABLE -->
-        <div class="table-wrapper">
-            @if($concerts->count() > 0)
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Concert</th>
-                            <th>Artist</th>
-                            <th>Venue</th>
-                            <th>Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($concerts as $concert)
-                            <tr>
-                                <td>
-                                    <div style="font-weight: 700; color: var(--text-primary);">{{ $concert->title }}</div>
-                                </td>
-                                <td>{{ $concert->artist }}</td>
-                                <td>{{ $concert->venue->name }}</td>
-                                <td>{{ $concert->date->format('M d, Y') }}</td>
-                                <td>
-                                    <div class="table-actions">
-                                        <a href="{{ route('admin.concerts.show', $concert) }}" class="action-btn action-view">View</a>
-                                        <a href="{{ route('admin.concerts.edit', $concert) }}" class="action-btn action-edit">Edit</a>
-                                        <form action="{{ route('admin.concerts.destroy', $concert) }}" method="POST" style="display: inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="action-btn action-delete" onclick="return confirm('Delete this concert? This action cannot be undone.')">Delete</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5">
-                                    <div class="empty-state">
-                                        <div class="empty-state-icon">🎤</div>
-                                        <h3>No Concerts Yet</h3>
-                                        <p>Start by creating your first concert event.</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            @endif
-        </div>
-
-        <!-- PAGINATION -->
-        @if($concerts->hasPages())
-            <div style="display: flex; justify-content: center; margin-top: 2rem;">
-                {{ $concerts->links() }}
-            </div>
-        @endif
-    </div>
+    </section>
+    @include('admin.partials.confirm-modal')
+    @include('admin.partials.theme-script')
 </x-app-layout>

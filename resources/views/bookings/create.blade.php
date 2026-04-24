@@ -3,7 +3,7 @@
         <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; align-items: center;">
             <div style="text-align: center; padding: 1rem; background: rgba(255, 102, 0, 0.08); border-left: 4px solid var(--accent-primary);">
                 <p style="font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.5rem; color: var(--text-tertiary);">Step 1</p>
-                <h3 style="margin: 0; font-size: 1rem; font-weight: 700;">Choose Seat</h3>
+                <h3 style="margin: 0; font-size: 1rem; font-weight: 700;">Choose Tickets</h3>
             </div>
             <div style="text-align: center; padding: 1rem; background: rgba(0, 0, 0, 0.03); border-left: 4px solid transparent;">
                 <p style="font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.5rem; color: var(--text-tertiary);">Step 2</p>
@@ -15,158 +15,124 @@
             </div>
             <div style="text-align: center; padding: 1rem; background: rgba(0, 0, 0, 0.03); border-left: 4px solid transparent;">
                 <p style="font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.5rem; color: var(--text-tertiary);">Step 4</p>
-                <h3 style="margin: 0; font-size: 1rem; font-weight: 700;">Get Ticket</h3>
+                <h3 style="margin: 0; font-size: 1rem; font-weight: 700;">Get Tickets</h3>
             </div>
         </div>
     </div>
 
     <div style="margin-bottom: 3rem;">
-        <p style="color: var(--accent-primary); font-weight: 700; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.1em; margin-bottom: 0.5rem;">Seat Selection</p>
-        <h1 class="page-title" style="font-size: 3.5rem;">CHOOSE YOUR SEATS</h1>
-        <p style="color: var(--text-secondary); font-size: 1.1rem; margin-top: 1rem;">{{ $concert->title }} • {{ $concert->date->format('M d, Y') }}</p>
+        <p style="color: var(--accent-primary); font-weight: 700; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.1em; margin-bottom: 0.5rem;">Ticket Selection</p>
+        <h1 class="page-title" style="font-size: 3.5rem;">CHOOSE YOUR TICKETS</h1>
+        <p style="color: var(--text-secondary); font-size: 1.1rem; margin-top: 1rem;">{{ $concert->title }} • {{ $concert->date->format('M d, Y') }} • {{ $concert->venue->name }}</p>
     </div>
 
     <div class="grid-2 gap-8">
-        <!-- MAIN: SEAT SELECTION FORM -->
+        <!-- MAIN: TICKET SELECTION FORM -->
         <div class="card no-hover">
             <div class="card-header">
                 <div>
-                    <h3 class="card-title">AVAILABLE SEATS</h3>
-                    <p style="color: var(--text-secondary); font-size: 0.95rem;">{{ $concert->venue->name }}</p>
+                    <h3 class="card-title">TICKET TYPES</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">Max 5 tickets per transaction</p>
                 </div>
             </div>
 
             <form action="{{ route('bookings.store', $concert) }}" method="POST">
                 @csrf
-                @php $priceMap = $concert->ticketPrices->pluck('price', 'section'); @endphp
+                @php $prices = $concert->ticketPrices->pluck('price', 'section'); @endphp
 
                 <div class="card-body">
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-                        <div style="min-width: 220px;">
-                            <label for="ticket_quantity" style="display: block; font-weight: 700; margin-bottom: 0.5rem;">Ticket Quantity</label>
-                            <select id="ticket_quantity" name="ticket_quantity" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 0; font-size: 0.95rem;">
-                                @for($i = 1; $i <= 5; $i++)
-                                    <option value="{{ $i }}">{{ $i }} Ticket{{ $i > 1 ? 's' : '' }}</option>
-                                @endfor
+                    <!-- Capacity Check Warning -->
+                    @php 
+                        $totalSold = $concert->bookings->sum(fn($b) => $b->tickets->count());
+                        $remaining = $concert->venue->capacity - $totalSold;
+                    @endphp
+                    @if($remaining <= 0)
+                        <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem; text-align: center;">
+                            <p style="color: #dc2626; font-weight: 600; margin: 0;">🎫 SOLD OUT</p>
+                            <p style="color: #991b1b; margin-top: 0.5rem;">This event has reached venue capacity.</p>
+                        </div>
+                        <div class="card-footer">
+                            <button type="button" class="btn btn-secondary w-full" disabled>Tickets Unavailable</button>
+                        </div>
+                    @else
+                        <!-- Ticket Type Selection -->
+                        <div style="margin-bottom: 1.5rem;">
+                            <label for="ticket_type" style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">Ticket Type</label>
+                            <select id="ticket_type" name="ticket_type" required style="width: 100%; padding: 0.75rem 1rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 0.25rem; font-size: 0.95rem;">
+                                <option value="">Select ticket type</option>
+                                @foreach($prices as $type => $price)
+                                    <option value="{{ $type }}" data-price="{{ $price }}"> {{ $type }} - ${{ number_format($price, 2) }}</option>
+                                @endforeach
                             </select>
                         </div>
-                        <div style="flex: 1; min-width: 240px; color: var(--text-secondary);">
-                            <p style="margin: 0 0 0.25rem; font-weight: 700;">Select up to 5 available seats.</p>
-                            <p style="margin: 0; font-size: 0.95rem;">Your chosen seat count must match the ticket quantity.</p>
-                        </div>
-                    </div>
 
-                    <!-- Seat Map -->
-                    <div style="margin-bottom: 2rem;">
-                        <div style="margin-bottom: 1.5rem; padding: 1rem; border: 1px solid rgba(148,163,184,0.12); border-radius: 1rem; text-align: center;">
-                            <span style="display: inline-block; padding: 0.85rem 1.5rem; border-radius: 9999px; color: var(--accent-primary); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;">Stage</span>
-                        </div>
-
-                        @php
-                            $sections = $concert->concertSeats->groupBy(fn($seat) => $seat->seat->section);
-                            $orderedSections = collect();
-                            $order = ['floor', 'lower', 'upper', 'balcony'];
-                            foreach ($order as $orderName) {
-                                foreach ($sections as $name => $group) {
-                                    if (str_contains(strtolower($name), $orderName) && !$orderedSections->has($name)) {
-                                        $orderedSections->put($name, $group);
-                                    }
-                                }
-                            }
-                            foreach ($sections as $name => $group) {
-                                if (!$orderedSections->has($name)) {
-                                    $orderedSections->put($name, $group);
-                                }
-                            }
-                        @endphp
-
-                        @foreach($orderedSections as $section => $seats)
-                            <div style="margin-bottom: 0.75rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(148,163,184,0.12); border-radius: 1rem; padding: 0.75rem;">
-                                <div style="display: grid; grid-template-columns: repeat(10, minmax(16px, 1fr)); gap: 0.4rem; margin-bottom: 0.75rem;">
-                                    @foreach($seats->sortBy(fn($s) => $s->seat->seat_number) as $concertSeat)
-                                        @php
-                                            $seatStatus = $concertSeat->status;
-                                            $seatPrice = $priceMap[$concertSeat->seat->section] ?? 0;
-                                            $selectable = $seatStatus === 'available';
-                                        @endphp
-                                        <label style="display: block; cursor: {{ $selectable ? 'pointer' : 'not-allowed' }};">
-                                            <input
-                                                type="checkbox"
-                                                name="seat_ids[]"
-                                                value="{{ $concertSeat->id }}"
-                                                data-price="{{ $seatPrice }}"
-                                                data-section="{{ $concertSeat->seat->section }}"
-                                                data-seat-number="{{ $concertSeat->seat->seat_number }}"
-                                                style="display: none;"
-                                                @if(!$selectable) disabled @endif
-                                            />
-                                            <div class="seat-block {{ $seatStatus }}" style="aspect-ratio: 1.3 / 1;">
-                                                <span style="font-size: 0.72rem; font-weight: 700;">{{ preg_replace('/[^0-9]/', '', $concertSeat->seat->seat_number) }}</span>
-                                            </div>
-                                        </label>
-                                    @endforeach
-                                </div>
-                                <div style="text-align: center; color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;">
-                                    {{ $section }}
-                                </div>
+                        <!-- Quantity Selection (for VIP and Gen Ad) -->
+                        <div id="quantity-section" style="margin-bottom: 1.5rem; display: none;">
+                            <label for="ticket_quantity" style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">Quantity</label>
+                            <div style="display: grid; grid-template-columns: 1fr 150px; gap: 0.75rem; align-items: flex-end; margin-bottom: 1.5rem;">
+                                <select id="ticket_quantity" name="ticket_quantity" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 0.25rem; font-size: 0.95rem;">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                                <button type="button" id="add-quantity-ticket-btn" style="padding: 0.75rem 1rem; background: var(--accent-primary); color: white; border: none; border-radius: 0.25rem; font-weight: 700; cursor: pointer; white-space: nowrap; width: 100%;">+ ADD TICKET</button>
                             </div>
-                        @endforeach
-                    </div>
+                        </div>
 
-                    <!-- Legend -->
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding: 1.5rem; background-color: rgba(20, 20, 20, 0.85); border-left: 3px solid var(--accent-primary);">
-                        <div style="text-align: center;">
-                            <div style="width: 20px; height: 20px; background-color: #ff6600; margin: 0 auto 0.5rem; border-radius: 0;"></div>
-                            <p style="font-size: 0.75rem; color: #ddd; text-transform: uppercase;">Available</p>
+                        <!-- Seat Selection (for UBB and LBB) -->
+                        <div id="seat-selection" style="margin-bottom: 1.5rem; display: none;">
+                            <label for="seat_dropdown" style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">Select Seat</label>
+                            <div style="display: grid; grid-template-columns: 1fr 150px; gap: 0.75rem; align-items: flex-end; margin-bottom: 1.5rem;">
+                                <select id="seat_dropdown" name="seat_dropdown" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 0.25rem; font-size: 0.95rem; color: var(--text-primary);">
+                                    <option value="">Choose a seat...</option>
+                                </select>
+                                <button type="button" id="add-seat-ticket-btn" style="padding: 0.75rem 1rem; background: var(--accent-primary); color: white; border: none; border-radius: 0.25rem; font-weight: 700; cursor: pointer; white-space: nowrap; width: 100%;">+ ADD TICKET</button>
+                            </div>
                         </div>
-                        <div style="text-align: center;">
-                            <div style="width: 20px; height: 20px; background-color: #4b5563; margin: 0 auto 0.5rem; border-radius: 0;"></div>
-                            <p style="font-size: 0.75rem; color: #ddd; text-transform: uppercase;">Reserved</p>
+
+                        <!-- Added Tickets List -->
+                        <div id="added-tickets" style="margin-bottom: 1rem; padding: 0.85rem; background: rgba(255, 102, 0, 0.05); border-left: 4px solid var(--accent-primary); border-radius: 0.5rem; display: none;">
+                            <h4 style="font-weight: 700; margin-bottom: 0.75rem; color: var(--text-primary); font-size: 1rem;">Selected Tickets</h4>
+                            <div id="tickets-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
                         </div>
-                        <div style="text-align: center;">
-                            <div style="width: 20px; height: 20px; background-color: #111827; margin: 0 auto 0.5rem; border-radius: 0;"></div>
-                            <p style="font-size: 0.75rem; color: #ddd; text-transform: uppercase;">Sold</p>
+
+                        <div id="total-preview" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(148, 163, 184, 0.12); border-radius: 0.5rem; padding: 1rem; text-align: center; margin-bottom: 1rem; display: none;">
+                            <div style="font-size: 1.25rem; font-weight: 700; color: var(--accent-primary); margin-bottom: 0.25rem;" id="total-price">$0.00</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);" id="total-details"></div>
+                            <div id="selected-seats-summary" style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem; display: none;">
+                                <strong>Seats:</strong> <span id="seats-summary-text"></span>
+                            </div>
                         </div>
-                    </div>
+
+                        <!-- Hidden inputs for cart items -->
+                        <input type="hidden" id="cart_items" name="cart_items" value="">
+
+                        <div style="text-align: center; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem;">
+                            <strong>Max 5 tickets per purchase</strong> | Tickets are assigned randomly within your selected type
+                        </div>
+                    @endif
                 </div>
 
                 <div class="card-footer">
-                    <button id="checkout-button" type="submit" class="btn btn-primary" style="flex: 1; justify-content: center;">REVIEW ORDER</button>
+                    <button id="checkout-button" type="submit" class="btn btn-primary w-full" style="font-weight: 700; letter-spacing: 0.05em;" disabled>SELECT TICKET TYPE</button>
                 </div>
             </form>
         </div>
 
-        <!-- SIDEBAR: ORDER SUMMARY -->
+        <!-- SIDEBAR: EVENT INFO -->
         <div class="card no-hover">
             <div class="card-header">
-                <h3 class="card-title">ORDER SUMMARY</h3>
+                <h3 class="card-title">EVENT INFO</h3>
             </div>
 
             <div class="card-body">
-                <div style="display: grid; gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background-color: rgba(255, 102, 0, 0.05); border-left: 4px solid var(--accent-primary);">
-                    <div style="display: flex; justify-content: space-between; color: var(--text-secondary);">
-                        <span>Tickets Selected</span>
-                        <span id="selected-count">0</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; color: var(--text-secondary);">
-                        <span>Seat IDs</span>
-                        <span id="selected-seats">None</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-weight: 700;">
-                        <span>Total</span>
-                        <span id="selected-total">$0.00</span>
-                    </div>
-                </div>
-
                 <div style="border-left: 3px solid var(--accent-primary); padding-left: 1.5rem; margin-bottom: 2rem;">
                     <h4 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">{{ $concert->title }}</h4>
                     <p style="color: var(--accent-secondary); font-weight: 600; margin-bottom: 1rem;">by {{ $concert->artist }}</p>
                     
                     <div style="display: flex; flex-direction: column; gap: 0.75rem; color: var(--text-secondary); font-size: 0.95rem;">
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>Concert</span>
-                            <span>{{ $concert->title }}</span>
-                        </div>
                         <div style="display: flex; justify-content: space-between;">
                             <span>Date</span>
                             <span>{{ $concert->date->format('M d, Y') }}</span>
@@ -179,141 +145,280 @@
                             <span>Venue</span>
                             <span>{{ $concert->venue->name }}</span>
                         </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Capacity</span>
+                            <span>{{ $concert->venue->capacity }} seats</span>
+                        </div>
                     </div>
                 </div>
 
-                <div style="border-top: 2px solid rgba(255, 102, 0, 0.3); padding-top: 1.5rem;">
-                    <h4 style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; color: var(--text-tertiary); letter-spacing: 0.05em; margin-bottom: 1rem;">Price Information</h4>
-                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                        @foreach($concert->ticketPrices as $price)
-                            <div style="display: flex; justify-content: space-between; padding: 0.75rem; background-color: rgba(255, 102, 0, 0.05); border-left: 2px solid var(--accent-primary);">
-                                <span style="font-weight: 600;">{{ $price->section }}</span>
-                                <span style="color: var(--accent-primary); font-weight: 700;">${{ number_format($price->price, 2) }}</span>
-                            </div>
-                        @endforeach
+                @if($concert->seat_plan_image)
+                    <div style="margin-bottom: 1.5rem;">
+                        <img src="{{ asset('storage/' . $concert->seat_plan_image) }}" alt="Seat Plan" style="width: 100%; height: auto; border-radius: 0.5rem;" />
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; margin-top: 0.5rem;">Reference seat plan - tickets assigned within type</p>
                     </div>
+                @else
+                    <div style="margin-bottom: 1.5rem; padding: 1rem; border: 1px dashed rgba(148, 163, 184, 0.5); border-radius: 0.5rem; background: rgba(255,255,255,0.02); text-align: center; color: var(--text-secondary);">
+                        <p style="margin: 0; font-weight: 700;">No Seat Plan Available</p>
+                        <p style="margin: 0.5rem 0 0; font-size: 0.85rem;">Upload a seat plan image in the concert admin panel to show it here.</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 1.5rem;">
+        <div class="card no-hover">
+            <div class="card-header">
+                <h3 class="card-title">All Available Prices</h3>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    @foreach($prices as $type => $price)
+                        <div style="display: flex; justify-content: space-between; padding: 0.85rem 1rem; background: rgba(255, 255, 255, 0.03); border-radius: 0.5rem;">
+                            <span>{{ $type }}</span>
+                            <span style="font-weight: 700;">${{ number_format($price, 2) }}</span>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         </div>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ticketTypeSelect = document.getElementById('ticket_type');
+            const quantitySelect = document.getElementById('ticket_quantity');
+            const quantitySection = document.getElementById('quantity-section');
+            const seatSelection = document.getElementById('seat-selection');
+            const seatDropdown = document.getElementById('seat_dropdown');
+            const addQuantityTicketBtn = document.getElementById('add-quantity-ticket-btn');
+            const addSeatTicketBtn = document.getElementById('add-seat-ticket-btn');
+            const addedTicketsDiv = document.getElementById('added-tickets');
+            const ticketsList = document.getElementById('tickets-list');
+            const cartItemsInput = document.getElementById('cart_items');
+            const totalPreview = document.getElementById('total-preview');
+            const totalPriceEl = document.getElementById('total-price');
+            const totalDetailsEl = document.getElementById('total-details');
+            const selectedSeatsSummary = document.getElementById('selected-seats-summary');
+            const seatsSummaryText = document.getElementById('seats-summary-text');
+            const checkoutButton = document.getElementById('checkout-button');
+
+            let seatsData = [];
+            let cartItems = [];
+            const concertId = {{ $concert->id }};
+            const maxTickets = 5;
+            const seatSections = ['Lower Box B (LBB)', 'Upper Box B (UBB)'];
+
+            function getCartQuantity() {
+                return cartItems.reduce((sum, item) => sum + (item.quantity ?? 1), 0);
+            }
+
+            function getTicketPrice(type) {
+                const option = Array.from(ticketTypeSelect.options).find(opt => opt.value === type);
+                return option ? parseFloat(option.dataset.price) : 0;
+            }
+
+            // Load seats data
+            async function loadSeats() {
+                try {
+                    const response = await fetch(`/concerts/${concertId}/seats`);
+                    seatsData = await response.json();
+                    populateSeatDropdown();
+                } catch (error) {
+                    console.error('Error loading seats:', error);
+                }
+            }
+
+            // Populate seat dropdown
+            function populateSeatDropdown() {
+                const ticketType = ticketTypeSelect.value;
+                seatDropdown.innerHTML = '<option value="">Choose a seat...</option>';
+
+                const availableSeats = seatsData.filter(seat => {
+                    const sectionMatch = seatSections.includes(ticketType) && seat.section === ticketType;
+                    const isAvailable = seat.status === 'available';
+                    const notAdded = !cartItems.some(item => item.seat_id == seat.id);
+                    return sectionMatch && isAvailable && notAdded;
+                });
+
+                availableSeats.forEach(seat => {
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify({ id: seat.id, number: seat.seat_number });
+                    option.textContent = `${seat.section} - Seat ${seat.seat_number}`;
+                    seatDropdown.appendChild(option);
+                });
+            }
+
+            function updateCartInput() {
+                cartItemsInput.value = JSON.stringify(cartItems);
+            }
+
+            // Add ticket to the cart
+            function addTicket() {
+                const type = ticketTypeSelect.value;
+                if (!type) {
+                    alert('Please select a ticket type');
+                    return;
+                }
+
+                const currentQuantity = getCartQuantity();
+                if (currentQuantity >= maxTickets) {
+                    alert(`Maximum ${maxTickets} tickets per booking`);
+                    return;
+                }
+
+                if (seatSections.includes(type)) {
+                    if (!seatDropdown.value) {
+                        alert('Please select a seat');
+                        return;
+                    }
+
+                    if (currentQuantity + 1 > maxTickets) {
+                        alert(`Total tickets cannot exceed ${maxTickets}`);
+                        return;
+                    }
+
+                    const seatData = JSON.parse(seatDropdown.value);
+                    cartItems.push({
+                        ticket_type: type,
+                        seat_id: seatData.id,
+                        seat_number: seatData.number
+                    });
+                    populateSeatDropdown();
+                } else {
+                    const quantity = parseInt(quantitySelect.value, 10);
+                    if (quantity < 1) {
+                        alert('Please choose at least one ticket');
+                        return;
+                    }
+
+                    if (currentQuantity + quantity > maxTickets) {
+                        alert(`Total tickets cannot exceed ${maxTickets}`);
+                        return;
+                    }
+
+                    const existingIndex = cartItems.findIndex(item => item.ticket_type === type && item.quantity);
+                    if (existingIndex !== -1) {
+                        cartItems[existingIndex].quantity += quantity;
+                    } else {
+                        cartItems.push({
+                            ticket_type: type,
+                            quantity: quantity
+                        });
+                    }
+                }
+
+                updateCartInput();
+                updateCartDisplay();
+                updatePreview();
+            }
+
+            // Update tickets display
+            function updateCartDisplay() {
+                ticketsList.innerHTML = '';
+                if (cartItems.length > 0) {
+                    cartItems.forEach((item, index) => {
+                        const ticketTag = document.createElement('div');
+                        ticketTag.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.5); padding: 0.5rem 0.75rem; border-radius: 0.25rem; border-left: 3px solid var(--accent-primary); gap: 0.75rem; border: 1px solid rgba(0,0,0,0.12);';
+                        
+                        const ticketInfo = document.createElement('span');
+                        ticketInfo.style.cssText = 'font-weight: 600; color: var(--text-primary); flex: 1; font-size: 0.95rem;';
+                        ticketInfo.textContent = item.quantity ? `${item.quantity} × ${item.ticket_type}` : `${item.ticket_type} - Seat ${item.seat_number}`;
+                        
+                        const removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.className = 'remove-ticket-btn';
+                        removeBtn.dataset.index = index;
+                        removeBtn.setAttribute('aria-label', 'Remove ticket');
+                        removeBtn.style.cssText = 'background: var(--accent-primary); color: white; border: none; padding: 0.35rem; border-radius: 0.25rem; cursor: pointer; font-size: 1rem; font-weight: 700; line-height: 1; width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center;';
+                        removeBtn.textContent = '×';
+
+                        ticketTag.appendChild(ticketInfo);
+                        ticketTag.appendChild(removeBtn);
+                        ticketsList.appendChild(ticketTag);
+                    });
+                    addedTicketsDiv.style.display = 'block';
+
+                    document.querySelectorAll('.remove-ticket-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const index = parseInt(e.target.dataset.index, 10);
+                            cartItems.splice(index, 1);
+                            populateSeatDropdown();
+                            updateCartDisplay();
+                            updatePreview();
+                            updateCartInput();
+                        });
+                    });
+                } else {
+                    addedTicketsDiv.style.display = 'none';
+                }
+
+                updateCartInput();
+            }
+
+            // Update preview
+            function updatePreview() {
+                const totalQuantity = getCartQuantity();
+                if (totalQuantity === 0) {
+                    totalPreview.style.display = 'none';
+                    checkoutButton.disabled = true;
+                    checkoutButton.textContent = 'ADD TICKETS';
+                    return;
+                }
+
+                const total = cartItems.reduce((sum, item) => {
+                    const price = getTicketPrice(item.ticket_type);
+                    return sum + price * (item.quantity ?? 1);
+                }, 0);
+
+                const details = cartItems.map(item => {
+                    return item.quantity ? `${item.quantity} × ${item.ticket_type}` : `${item.ticket_type} - Seat ${item.seat_number}`;
+                }).join(', ');
+
+                const seatItems = cartItems.filter(item => item.seat_id).map(item => `Seat ${item.seat_number}`);
+
+                totalPriceEl.textContent = `$${total.toFixed(2)}`;
+                totalDetailsEl.textContent = details;
+                selectedSeatsSummary.style.display = seatItems.length ? 'block' : 'none';
+                seatsSummaryText.textContent = seatItems.join(', ');
+                totalPreview.style.display = 'block';
+                checkoutButton.disabled = false;
+                checkoutButton.textContent = `REVIEW ORDER ($${total.toFixed(2)})`;
+            }
+
+            // Handle ticket type change
+            ticketTypeSelect.addEventListener('change', function() {
+                const type = this.value;
+                if (seatSections.includes(type)) {
+                    quantitySection.style.display = 'none';
+                    seatSelection.style.display = 'block';
+                    loadSeats();
+                } else if (type === 'VIP Standing' || type === 'General Admission (Gen Ad)') {
+                    quantitySection.style.display = 'block';
+                    seatSelection.style.display = 'none';
+                } else {
+                    quantitySection.style.display = 'none';
+                    seatSelection.style.display = 'none';
+                }
+
+                updatePreview();
+            });
+
+            addQuantityTicketBtn.addEventListener('click', addTicket);
+            addSeatTicketBtn.addEventListener('click', addTicket);
+
+            updatePreview();
+        });
+    </script>
+
     <style>
-        .seat-block {
-            aspect-ratio: 1.4 / 1;
-            border-radius: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-            min-height: 40px;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-
-        .seat-block.available {
-            background: #ff6600;
-            border: 1px solid #ff6600;
-            color: #000;
-        }
-
-        .seat-block.reserved {
-            background: #4b5563;
-            border: 1px solid #4b5563;
-            color: #fff;
-            opacity: 0.9;
-        }
-
-        .seat-block.sold {
-            background: #111827;
-            border: 1px solid #111827;
-            color: #fff;
-            opacity: 0.9;
-        }
-
-        .seat-block.available:hover {
-            transform: translateY(-2px);
-        }
-
-        .seat-block.selected {
-            border-color: rgba(59, 130, 246, 0.75);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
-            background: rgba(59, 130, 246, 0.35);
-        }
-
         .card.no-hover:hover {
             transform: none !important;
             box-shadow: var(--shadow-md) !important;
         }
-
         .card.no-hover:hover::after {
             opacity: 0 !important;
         }
     </style>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const quantitySelect = document.getElementById('ticket_quantity');
-            const seatInputs = Array.from(document.querySelectorAll('input[name="seat_ids[]"]'));
-            const selectedCount = document.getElementById('selected-count');
-            const selectedSeats = document.getElementById('selected-seats');
-            const selectedTotal = document.getElementById('selected-total');
-            const checkoutButton = document.getElementById('checkout-button');
-
-            function updateSummary() {
-                const selected = seatInputs.filter(input => input.checked);
-                const maxTickets = parseInt(quantitySelect.value, 10);
-                const totalPrice = selected.reduce((sum, input) => sum + Number(input.dataset.price || 0), 0);
-                selectedCount.textContent = selected.length;
-                selectedSeats.textContent = selected.length ? selected.map(input => input.dataset.seatNumber).join(', ') : 'None';
-                selectedTotal.textContent = `$${totalPrice.toFixed(2)}`;
-
-                seatInputs.forEach(input => {
-                    const seatCard = input.closest('label').querySelector('.seat-block');
-                    seatCard?.classList.toggle('selected', input.checked);
-                });
-
-                if (selected.length > maxTickets) {
-                    checkoutButton.disabled = true;
-                    checkoutButton.textContent = 'Reduce seats to proceed';
-                } else if (selected.length === 0) {
-                    checkoutButton.disabled = true;
-                    checkoutButton.textContent = 'Select seats to proceed';
-                } else {
-                    checkoutButton.disabled = false;
-                    checkoutButton.textContent = 'PROCEED TO CHECKOUT';
-                }
-            }
-
-            function enforceLimits(event) {
-                const selected = seatInputs.filter(input => input.checked);
-                const maxTickets = parseInt(quantitySelect.value, 10);
-                if (selected.length > maxTickets) {
-                    event.target.checked = false;
-                    alert(`You can only select up to ${maxTickets} seat${maxTickets > 1 ? 's' : ''}.`);
-                }
-            }
-
-            quantitySelect.addEventListener('change', function () {
-                const maxTickets = parseInt(this.value, 10);
-                const selected = seatInputs.filter(input => input.checked);
-                if (selected.length > maxTickets) {
-                    selected.slice(maxTickets).forEach(input => {
-                        input.checked = false;
-                        input.closest('label').querySelector('.seat-btn')?.classList.remove('selected');
-                    });
-                    alert(`Ticket quantity updated to ${maxTickets}. Extra seats were unselected.`);
-                }
-                updateSummary();
-            });
-
-            seatInputs.forEach(input => {
-                input.addEventListener('change', function (event) {
-                    enforceLimits(event);
-                    updateSummary();
-                });
-            });
-
-            updateSummary();
-        });
-    </script>
 </x-app-layout>

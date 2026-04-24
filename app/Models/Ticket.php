@@ -9,6 +9,7 @@ class Ticket extends Model
     protected $fillable = [
         'booking_id',
         'seat_id',
+        'ticket_type',
         'price_at_purchase',
         'qr_code',
     ];

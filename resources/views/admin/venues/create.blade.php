@@ -1,41 +1,43 @@
 <x-app-layout>
-    <div class="admin-container">
-        <div style="margin-bottom: 3rem;" class="fade-in">
-            <h1 style="font-size: 3.5rem; font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem;">CREATE VENUE</h1>
-            <p style="font-size: 1.1rem; color: var(--accent-primary); font-weight: 600;">Add a new physical location to your platform</p>
-        </div>
-
-        <div class="admin-form fade-in">
-            <form action="{{ route('admin.venues.store') }}" method="POST">
-                @csrf
-
-                <h3 style="font-size: 1.5rem; font-weight: 700; text-transform: uppercase; margin-top: 0; margin-bottom: 1.5rem; color: var(--accent-primary);">Venue Information</h3>
-                
-                <div class="form-group">
-                    <label for="name" class="form-label">Venue Name</label>
-                    <input type="text" name="name" id="name" value="{{ old('name') }}" placeholder="e.g., Grand Stadium" required>
-                    @error('name') <p class="form-error">{{ $message }}</p> @enderror
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="location" class="form-label">Location / City</label>
-                        <input type="text" name="location" id="location" value="{{ old('location') }}" placeholder="e.g., Los Angeles, CA" required>
-                        @error('location') <p class="form-error">{{ $message }}</p> @enderror
+    <section class="admin-dashboard" id="adminDashboard">
+        <div class="admin-shell">
+            @include('admin.partials.sidebar')
+            <main class="admin-main">
+                @include('admin.partials.flash')
+                <header class="admin-header">
+                    <div><h2>Create Venue</h2><p>Create a venue profile with validated location and capacity information.</p></div>
+                    <div class="admin-header-actions">
+                        <button type="button" class="ad-btn ad-icon-btn" id="themeToggleBtn"><span id="themeToggleIcon">◐</span></button>
+                        <a href="{{ route('admin.venues.index') }}" class="ad-btn">Back</a>
                     </div>
+                </header>
+                <section class="ad-card">
+                    <h3 class="ad-panel-title">Venue Information</h3>
+<form method="POST" action="{{ route('admin.venues.store') }}" enctype="multipart/form-data" class="ad-form-grid-3">
+                        @csrf
+                        <div class="ad-field">
+                            <label class="ad-label" for="name">Venue Name</label>
+                            <input class="ad-input" id="name" type="text" name="name" value="{{ old('name') }}" required>
+                        </div>
+                        <div class="ad-field">
+                            <label class="ad-label" for="location">Location</label>
+                            <input class="ad-input" id="location" type="text" name="location" value="{{ old('location') }}" required>
+                        </div>
+                        <div class="ad-field">
+                            <label class="ad-label" for="capacity">Capacity</label>
+                            <input class="ad-input" id="capacity" type="number" name="capacity" value="{{ old('capacity') }}" min="1" required>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="capacity" class="form-label">Max Capacity</label>
-                        <input type="number" name="capacity" id="capacity" value="{{ old('capacity') }}" placeholder="0" min="1" required>
-                        @error('capacity') <p class="form-error">{{ $message }}</p> @enderror
-                    </div>
-                </div>
+                        <div class="ad-field ad-field-full">
+                            <div class="ad-actions-row">
+                                <button class="ad-btn ad-btn-primary" type="submit">Create Venue</button>
+                            </div>
+                        </div>
 
-                <div class="form-actions">
-                    <a href="{{ route('admin.venues.index') }}" class="btn btn-outline">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Create Venue</button>
-                </div>
-            </form>
+                    </form>
+                </section>
+            </main>
         </div>
-    </div>
+    </section>
+    @include('admin.partials.theme-script')
 </x-app-layout>

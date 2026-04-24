@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\ActivityLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,13 +27,36 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $oldEmail = $user->email;
+        $oldName = $user->name;
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $user->fill($request->validated());
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
+
+        // Log profile update
+        $changes = [];
+        if ($oldName !== $user->name) {
+            $changes[] = 'name';
+        }
+        if ($oldEmail !== $user->email) {
+            $changes[] = 'email';
+        }
+
+        if (!empty($changes)) {
+            ActivityLog::record([
+                'user_id' => $user->id,
+                'action' => 'update',
+                'entity_type' => 'profile',
+                'entity_id' => $user->id,
+                'description' => 'Updated profile: ' . implode(', ', $changes),
+            ]);
+        }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -47,6 +71,15 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+
+        // Log account deletion before deleting
+        ActivityLog::record([
+            'user_id' => $user->id,
+            'action' => 'delete',
+            'entity_type' => 'user',
+            'entity_id' => $user->id,
+            'description' => 'Deleted user account: ' . $user->email,
+        ]);
 
         Auth::logout();
 

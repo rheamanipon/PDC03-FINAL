@@ -6,12 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class ConcertSeat extends Model
 {
-    public $timestamps = false;
-
     protected $fillable = [
         'concert_id',
         'seat_id',
         'status',
+    ];
+
+    protected $casts = [
+        'status' => 'string',
     ];
 
     public function concert()

@@ -42,7 +42,7 @@
                         @if($concert->poster_url)
                             <div style="width: 100%; height: 200px; background: url('{{ asset('storage/' . $concert->poster_url) }}'); background-size: cover; background-position: center;"></div>
                         @else
-                            <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ff6600, #ff1493); display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+                            <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ff6600, #d10070); display: flex; align-items: center; justify-content: center; font-size: 3rem;">
                                 🎤
                             </div>
                         @endif
