@@ -573,6 +573,24 @@
     background-color: rgba(74, 74, 74, 0.7);
 }
 
+.admin-dashboard .ad-status.failed {
+    color: #ffffff;
+    background-color: #b42318;
+}
+
+.admin-dashboard .ad-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.75rem;
+    align-items: end;
+}
+
+.admin-dashboard .ad-filter-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
 @media (max-width: 1180px) {
     .admin-dashboard .ad-summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -592,6 +610,10 @@
 
     .admin-dashboard .ad-details-grid {
         grid-template-columns: 1fr;
+    }
+
+    .admin-dashboard .ad-filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -625,7 +647,8 @@
     .admin-dashboard .ad-form-grid-2,
     .admin-dashboard .ad-form-grid-3,
     .admin-dashboard .ad-detail-list,
-    .admin-dashboard .ad-kpi-grid {
+    .admin-dashboard .ad-kpi-grid,
+    .admin-dashboard .ad-filter-grid {
         grid-template-columns: 1fr;
     }
 }

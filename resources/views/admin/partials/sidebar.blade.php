@@ -11,6 +11,7 @@
         <li><a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}">Dashboard</a></li>
         <li><a href="{{ route('admin.concerts.index') }}" class="{{ request()->routeIs('admin.concerts.*') ? 'is-active' : '' }}">Manage Concerts</a></li>
         <li><a href="{{ route('admin.ticket-management') }}" class="{{ request()->routeIs('admin.ticket-management') ? 'is-active' : '' }}">Ticket Management</a></li>
+        <li><a href="{{ route('admin.transactions.index') }}" class="{{ request()->routeIs('admin.transactions.*') ? 'is-active' : '' }}">Manage Transactions</a></li>
         <li><a href="{{ route('admin.venues.index') }}" class="{{ request()->routeIs('admin.venues.*') ? 'is-active' : '' }}">Manage Venues</a></li>
         <li><a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.*') ? 'is-active' : '' }}">Manage Users</a></li>
         <li><a href="{{ route('admin.analytics') }}" class="{{ request()->routeIs('admin.analytics') ? 'is-active' : '' }}">Analytics</a></li>

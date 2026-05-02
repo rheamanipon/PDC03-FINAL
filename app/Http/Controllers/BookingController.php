@@ -13,9 +13,12 @@ use App\Services\ConcertSeatAvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class BookingController extends Controller
 {
+    private const GEN_AD_SECTION = 'General Admission (Gen Ad)';
+
     public function __construct(
         private readonly ConcertSeatAvailabilityService $seatAvailability,
     ) {
@@ -263,80 +266,86 @@ class BookingController extends Controller
             $totalPrice += $priceRecords[$item['concert_ticket_type_id']] * $item['quantity'];
         }
 
-        DB::transaction(function () use ($concert, $seatItems, $autoAssignItems, $totalPrice, $totalQuantity, $priceRecords, $ticketTypes) {
-            $booking = Booking::create([
-                'user_id' => Auth::id(),
-                'concert_id' => $concert->id,
-                'total_price' => $totalPrice,
-                'status' => 'confirmed',
-            ]);
+        $paymentMethod = trim((string) $request->input('card_number'));
 
-            foreach ($seatItems as $item) {
-                $concertTicketType = $ticketTypes[$item['concert_ticket_type_id']];
-                $ticketTypeSlug = $concertTicketType->ticketType->name ?? '';
-                $ticketTypeLabel = $concertTicketType->custom_name ?: ($concertTicketType->ticketType->description ? $concertTicketType->ticketType->description . ' (' . $ticketTypeSlug . ')' : $ticketTypeSlug);
-
-                $seat = Seat::find($item['seat_id']);
-                if (! $seat || $seat->venue_id !== $concert->venue_id
-                    || ! $this->seatAvailability->isSeatEligibleForTicketType($seat, $concert, $concertTicketType)) {
-                    throw new \Exception('Invalid seat selection.');
-                }
-
-                Ticket::create([
-                    'booking_id' => $booking->id,
-                    'concert_ticket_type_id' => $item['concert_ticket_type_id'],
-                    'seat_id' => $item['seat_id'],
-                    'ticket_type' => $ticketTypeLabel,
-                    'price_at_purchase' => $priceRecords[$item['concert_ticket_type_id']],
-                    'qr_code' => uniqid(),
+        try {
+            $booking = DB::transaction(function () use ($concert, $seatItems, $autoAssignItems, $totalPrice, $totalQuantity, $priceRecords, $ticketTypes, $paymentMethod) {
+                $booking = Booking::create([
+                    'user_id' => Auth::id(),
+                    'concert_id' => $concert->id,
+                    'total_price' => $totalPrice,
+                    'status' => 'confirmed',
                 ]);
-            }
 
-            foreach ($autoAssignItems as $item) {
-                $concertTicketType = $ticketTypes[$item['concert_ticket_type_id']];
-                $ticketTypeSlug = $concertTicketType->ticketType->name ?? '';
-                $ticketTypeLabel = $concertTicketType->custom_name ?: ($concertTicketType->ticketType->description ? $concertTicketType->ticketType->description . ' (' . $ticketTypeSlug . ')' : $ticketTypeSlug);
+                foreach ($seatItems as $item) {
+                    $concertTicketType = $ticketTypes[$item['concert_ticket_type_id']];
+                    $ticketTypeSlug = $concertTicketType->ticketType->name ?? '';
+                    $ticketTypeLabel = $concertTicketType->custom_name ?: ($concertTicketType->ticketType->description ? $concertTicketType->ticketType->description . ' (' . $ticketTypeSlug . ')' : $ticketTypeSlug);
 
-                // Create tickets without specific seat assignments
-                for ($i = 0; $i < $item['quantity']; $i++) {
+                    $seat = Seat::find($item['seat_id']);
+                    if (! $seat || $seat->venue_id !== $concert->venue_id
+                        || ! $this->seatAvailability->isSeatEligibleForTicketType($seat, $concert, $concertTicketType)) {
+                        throw new RuntimeException('Invalid seat selection.');
+                    }
+
                     Ticket::create([
                         'booking_id' => $booking->id,
                         'concert_ticket_type_id' => $item['concert_ticket_type_id'],
-                        'seat_id' => null, // No seat assigned
+                        'seat_id' => $item['seat_id'],
                         'ticket_type' => $ticketTypeLabel,
                         'price_at_purchase' => $priceRecords[$item['concert_ticket_type_id']],
                         'qr_code' => uniqid(),
                     ]);
                 }
-            }
 
-            Payment::create([
-                'booking_id' => $booking->id,
-                'amount' => $totalPrice,
-                'payment_method' => 'credit_card',
-                'status' => 'paid',
-            ]);
+                foreach ($autoAssignItems as $item) {
+                    $concertTicketType = $ticketTypes[$item['concert_ticket_type_id']];
+                    $ticketTypeSlug = $concertTicketType->ticketType->name ?? '';
+                    $ticketTypeLabel = $concertTicketType->custom_name ?: ($concertTicketType->ticketType->description ? $concertTicketType->ticketType->description . ' (' . $ticketTypeSlug . ')' : $ticketTypeSlug);
+                    $assignedSeatIds = $this->allocateGenAdSeatIds($concert, $concertTicketType, (int) $item['quantity']);
 
-            // Log the booking activity
-            ActivityLog::record([
-                'user_id' => Auth::id(),
-                'action' => 'create',
-                'entity_type' => 'booking',
-                'entity_id' => $booking->id,
-                'description' => 'Booked tickets for concert: ' . $concert->title . ' (' . $totalQuantity . ' tickets, ₱' . number_format($totalPrice, 2) . ')',
-            ]);
+                    for ($i = 0; $i < $item['quantity']; $i++) {
+                        Ticket::create([
+                            'booking_id' => $booking->id,
+                            'concert_ticket_type_id' => $item['concert_ticket_type_id'],
+                            'seat_id' => $assignedSeatIds[$i] ?? null,
+                            'ticket_type' => $ticketTypeLabel,
+                            'price_at_purchase' => $priceRecords[$item['concert_ticket_type_id']],
+                            'qr_code' => uniqid(),
+                        ]);
+                    }
+                }
 
-            return $booking;
-        });
+                Payment::create([
+                    'booking_id' => $booking->id,
+                    'amount' => $totalPrice,
+                    'payment_method' => $paymentMethod,
+                    'status' => 'paid',
+                ]);
+
+                // Log the booking activity
+                ActivityLog::record([
+                    'user_id' => Auth::id(),
+                    'action' => 'create',
+                    'entity_type' => 'booking',
+                    'entity_id' => $booking->id,
+                    'description' => 'Booked tickets for concert: ' . $concert->title . ' (' . $totalQuantity . ' tickets, ₱' . number_format($totalPrice, 2) . ')',
+                ]);
+
+                return $booking;
+            });
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['cart_items' => $e->getMessage()]);
+        }
 
         // Clear session
         session()->forget('booking_cart');
 
-        // Get the latest booking for this user and concert
-        $booking = Booking::where('user_id', Auth::id())
-            ->where('concert_id', $concert->id)
-            ->latest()
-            ->first();
+        if (! $booking) {
+            return redirect()
+                ->route('bookings.create', $concert)
+                ->withErrors(['general' => 'Payment succeeded but booking confirmation could not be loaded. Please check your bookings.']);
+        }
 
         return redirect()->route('bookings.tickets', ['booking' => $booking->id]);
     }
@@ -412,6 +421,100 @@ class BookingController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Gen Ad-only allocator: random single seat, or random-start consecutive block.
+     *
+     * @return list<int|null>
+     */
+    private function allocateGenAdSeatIds(Concert $concert, ConcertTicketType $concertTicketType, int $quantity): array
+    {
+        $slug = $concertTicketType->ticketType->name ?? '';
+        $section = $this->seatAvailability->sectionForTicketTypeSlug($slug);
+        if ($section !== self::GEN_AD_SECTION) {
+            return array_fill(0, $quantity, null);
+        }
+
+        if ($quantity < 1) {
+            throw new RuntimeException('Invalid ticket quantity.');
+        }
+
+        $ticketLimit = max(0, (int) $concertTicketType->quantity);
+        if ($ticketLimit < $quantity) {
+            throw new RuntimeException('Not enough General Admission tickets are available.');
+        }
+
+        $eligibleSeats = Seat::query()
+            ->where('venue_id', $concert->venue_id)
+            ->where('section', self::GEN_AD_SECTION)
+            ->where('status', 'available')
+            ->orderByRaw('CAST(seat_number AS UNSIGNED) ASC')
+            ->limit($ticketLimit)
+            ->lockForUpdate()
+            ->get(['id', 'seat_number']);
+
+        if ($eligibleSeats->count() < $quantity) {
+            throw new RuntimeException('Not enough General Admission seats are currently available.');
+        }
+
+        $eligibleIds = $eligibleSeats->pluck('id')->all();
+        $soldSeatIds = Ticket::query()
+            ->where('concert_ticket_type_id', $concertTicketType->id)
+            ->whereIn('seat_id', $eligibleIds)
+            ->lockForUpdate()
+            ->pluck('seat_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $availableSeats = $eligibleSeats
+            ->reject(fn ($seat) => in_array((int) $seat->id, $soldSeatIds, true))
+            ->values();
+
+        if ($availableSeats->count() < $quantity) {
+            throw new RuntimeException('Not enough General Admission seats are currently available.');
+        }
+
+        if ($quantity === 1) {
+            $chosen = $availableSeats->random();
+
+            return [(int) $chosen->id];
+        }
+
+        $seats = $availableSeats
+            ->map(fn ($seat) => ['id' => (int) $seat->id, 'num' => (int) $seat->seat_number])
+            ->sortBy('num')
+            ->values()
+            ->all();
+
+        $maxStart = count($seats) - $quantity;
+        if ($maxStart < 0) {
+            throw new RuntimeException('Not enough General Admission seats are currently available.');
+        }
+
+        $startIndexes = range(0, $maxStart);
+        shuffle($startIndexes);
+
+        foreach ($startIndexes as $start) {
+            $candidate = array_slice($seats, $start, $quantity);
+            if (count($candidate) !== $quantity) {
+                continue;
+            }
+
+            $consecutive = true;
+            for ($i = 1; $i < $quantity; $i++) {
+                if ($candidate[$i]['num'] !== $candidate[$i - 1]['num'] + 1) {
+                    $consecutive = false;
+                    break;
+                }
+            }
+
+            if ($consecutive) {
+                return array_map(fn ($seat) => $seat['id'], $candidate);
+            }
+        }
+
+        throw new RuntimeException('Unable to allocate consecutive General Admission seats. Please try again.');
     }
 
 }

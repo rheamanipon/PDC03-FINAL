@@ -23,4 +23,24 @@ class Payment extends Model
     {
         return $this->belongsTo(Booking::class);
     }
+
+    public function getMaskedPaymentMethodAttribute(): string
+    {
+        $value = trim((string) $this->payment_method);
+        $digitsOnly = preg_replace('/\D+/', '', $value) ?? '';
+
+        if ($digitsOnly === '') {
+            return str($value)->replace('_', ' ')->title()->value();
+        }
+
+        $lastFour = substr($digitsOnly, -4);
+        $prefix = trim((string) preg_replace('/\d+/', '', $value));
+        $prefix = trim((string) preg_replace('/\*+/', '', $prefix));
+
+        if ($prefix === '') {
+            return '****'.$lastFour;
+        }
+
+        return $prefix.' ****'.$lastFour;
+    }
 }

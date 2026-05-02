@@ -3,6 +3,7 @@
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ConcertController;
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminTransactionController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\Api\Admin\ConcertApiController;
 use App\Http\Controllers\Api\Admin\DashboardApiController;
@@ -50,6 +51,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/analytics', [AdminDashboardController::class, 'analytics'])->name('analytics');
     Route::get('/activity-logs', [AdminDashboardController::class, 'activityLogs'])->name('activity-logs');
     Route::get('/ticket-management', [AdminDashboardController::class, 'ticketManagement'])->name('ticket-management');
+    Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transactions.index');
+    Route::get('/transactions/{transaction}', [AdminTransactionController::class, 'show'])->name('transactions.show');
 
     Route::resource('concerts', ConcertController::class);
     Route::resource('venues', VenueController::class);
